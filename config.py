@@ -17,4 +17,5 @@ ACTIVE_HOURS_START = int(os.getenv("ACTIVE_HOURS_START", "9"))
 ACTIVE_HOURS_END = int(os.getenv("ACTIVE_HOURS_END", "25"))
 ADMIN_USER_ID = int(os.environ["ADMIN_USER_ID"])
 
+SESSION_STRING = os.getenv("SESSION_STRING", "")
 SESSION_NAME = "userbot_session"
