@@ -5,6 +5,7 @@ from aiogram.types import Message
 import config
 import database as db
 from userbot.responder import set_paused, is_paused
+from gpt.client import get_reply
 
 router = Router()
 
@@ -26,7 +27,8 @@ async def cmd_start(message: Message):
             "/setcooldown 45 — кулдаун в минутах\n"
             "/status — текущие настройки\n"
             "/pause — пауза\n"
-            "/resume — возобновить"
+            "/resume — возобновить\n"
+            "/test текст — проверить что ответит GPT"
         )
         return
 
@@ -152,6 +154,23 @@ async def cmd_status(message: Message):
         f"Часы: {h_start}:00 – {int(h_end) % 24:02d}:00 МСК"
     )
     await message.answer(text)
+
+
+@router.message(Command("test"))
+async def cmd_test(message: Message):
+    if not _admin_only(message):
+        return
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("Использование: /test текст поста")
+        return
+    post_text = args[1].strip()
+    await message.answer("⏳ Генерирую ответ...")
+    try:
+        reply = await get_reply(post_text)
+        await message.answer(f"🤖 GPT ответит:\n\n{reply}")
+    except Exception as e:
+        await message.answer(f"Ошибка: {e}")
 
 
 @router.message(Command("pause"))
