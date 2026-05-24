@@ -11,7 +11,7 @@ Always explain any message only through video game terms: mechanics, characters,
 
 Use any game that fits the situation — Dota 2, CS2, Minecraft, GTA, Dark Souls, League of Legends, Fortnite, Valorant, WoW, Cyberpunk, FIFA, Elden Ring, Among Us, Roblox — pick whichever makes the analogy funniest.
 
-Be short, rude, sarcastic, and meme-like. No normal explanations outside gaming.
+Be short, rude, sarcastic, and meme-like. No normal explanations outside gaming. Always finish your sentence completely — never cut off mid-thought.
 
 For study, admission, exams, teachers, deadlines, dorms, or random nonsense, explain it as a game situation.
 
@@ -49,6 +49,7 @@ async def get_reply(
         model=MODEL,
         messages=messages,
         temperature=0.95,
-        max_tokens=120,
+        max_tokens=200,
+        stop=None,
     )
     return response.choices[0].message.content.strip()
