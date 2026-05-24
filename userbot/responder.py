@@ -23,14 +23,6 @@ _REQUEST_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
-# Русские буквы для опечаток: замены, которые выглядят как реальные
-_TYPO_SWAPS = {
-    "а": "о", "о": "а", "е": "и", "и": "е",
-    "т": "ть", "н": "нн", "л": "лл",
-    "ь": "", "ъ": "",
-}
-
-
 def set_paused(value: bool):
     global _paused
     _paused = value
@@ -55,25 +47,19 @@ def _is_request(text: str) -> bool:
     return bool(_REQUEST_PATTERNS.search(text))
 
 
-def _inject_typos(text: str) -> str:
-    """С шансом 5% вносим 1-2 глупые опечатки в текст ответа."""
-    if random.random() > 0.05:
-        return text
-    words = text.split()
-    if len(words) < 3:
-        return text
-    # Меняем одно случайное слово
-    idx = random.randint(0, len(words) - 1)
-    word = words[idx]
-    if len(word) < 3:
-        return text
-    # Случайная замена буквы в середине слова
-    pos = random.randint(1, len(word) - 2)
-    char = word[pos].lower()
-    if char in _TYPO_SWAPS:
-        replacement = _TYPO_SWAPS[char]
-        words[idx] = word[:pos] + replacement + word[pos + 1:]
-    return " ".join(words)
+_URL_RE = re.compile(r"https?://|t\.me/|www\.", re.IGNORECASE)
+
+
+def _has_links(event) -> bool:
+    """Пост содержит гиперссылку — скорее всего реклама."""
+    text = event.message.text or ""
+    if _URL_RE.search(text):
+        return True
+    for entity in (event.message.entities or []):
+        from telethon.tl.types import MessageEntityUrl, MessageEntityTextUrl
+        if isinstance(entity, (MessageEntityUrl, MessageEntityTextUrl)):
+            return True
+    return False
 
 
 async def _maybe_react_clown(client: TelegramClient, event):
@@ -102,6 +88,10 @@ async def maybe_respond(client: TelegramClient, event, force_reply: bool = False
     if event.message.photo and len(text) < 20:
         return
     if len(text) < 20:
+        return
+
+    # Пропускаем рекламные посты со ссылками
+    if _has_links(event):
         return
 
     post_hour = _post_hour_msk(event)
@@ -152,7 +142,6 @@ async def maybe_respond(client: TelegramClient, event, force_reply: bool = False
             thread_context=thread_context,
             resistance_mode=resistance_mode,
         )
-        reply_text = _inject_typos(reply_text)
     except Exception as exc:
         logger.error("GPT error: %s", exc)
         return
