@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 
 DB_PATH = "bot.db"
@@ -77,11 +77,11 @@ def get_all_channels() -> list[dict]:
 # ---------- cooldown ----------
 
 def is_on_cooldown(channel_id: str, cooldown_minutes: int) -> bool:
-    since = datetime.utcnow() - timedelta(minutes=cooldown_minutes)
+    since = datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)
     with get_conn() as conn:
         row = conn.execute(
             "SELECT id FROM responses WHERE channel_id = ? AND responded_at > ? LIMIT 1",
-            (str(channel_id), since.isoformat()),
+            (str(channel_id), since.strftime("%Y-%m-%d %H:%M:%S")),
         ).fetchone()
     return row is not None
 
